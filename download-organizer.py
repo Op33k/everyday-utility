@@ -2,10 +2,12 @@ import os
 import shutil
 import glob
 
-# change to your download directory
-sort_dir = 'D:/Downloads'
+
+# change to any directory
+sort_dir = 'C:/Downloads'
 
 file_extentions = {
+    'unsorted': ('NULL'),
     'TEXT': ('.txt'),
     'OSU': ('.osk', '.osz', '.osr'),
     'DOCS': ('.docx', '.doc', '.pptx', '.ppt', '.xls', '.pdf'),
@@ -17,13 +19,13 @@ file_extentions = {
     'EXE': ('.exe', '.bat'),
     'ADOBE': ('.aep', '.psd', '.ffx'),
     'ZIP': ('.zip', '.rar', '.7z', '.bz2', '.xz', '.gz'),
-    'VIDEO': ('.mp4', '.mov', '.avi', '.webm'),
+    'VIDEO': ('.mp4', '.mov', '.avi', 'm4v', '.webm'),
 }
 
-# add exclusions to sorting
+# add exclusions from sorting
 exclude = []
 
-# if true all files/subdirectories will be processed
+# WARNING - if true ALL subdirectories/files will be processed!
 is_recursive = False
 
 
@@ -32,23 +34,33 @@ def ext(file):
     return ext
 
 
-for file in glob.iglob(sort_dir + '**/**', recursive=is_recursive):
+if is_recursive:
+    wildcard = '/**/*.*'
+else:
+    wildcard = '/**'
+
+for i in file_extentions:
+    exclude.append(i.lower())
+
+for file in glob.iglob(sort_dir + wildcard, recursive=is_recursive):
     file_name = os.path.basename(file)
-    move_dest = f'{sort_dir}/unsorted/{file_name}'
 
     for extention_type in file_extentions:
         dest = extention_type.lower()
-        exclude.append(dest)
-
-        if not os.path.isdir(f'{sort_dir}/{dest}'):
-            os.mkdir(f'{sort_dir}/{dest}')
 
         if ext(file_name) in file_extentions[extention_type]:
             move_dest = f'{sort_dir}/{extention_type.lower()}/{file_name}'
 
+        if not os.path.isdir(f'{sort_dir}/{dest}'):
+            os.mkdir(f'{sort_dir}/{dest}')
+
+        if os.path.isdir(file):
+            if not is_recursive:
+                move_dest = f'{sort_dir}/unsorted/'
+
     if file_name not in exclude and file_name != os.path.basename(__file__):
         try:
             shutil.move(file, move_dest)
-        except FileNotFoundError:
-            if not os.path.isdir(f'{sort_dir}/unsorted'):
-                os.mkdir(f'{sort_dir}/unsorted')
+            print(f'Moving {file}\n')
+        except NameError:
+            continue
